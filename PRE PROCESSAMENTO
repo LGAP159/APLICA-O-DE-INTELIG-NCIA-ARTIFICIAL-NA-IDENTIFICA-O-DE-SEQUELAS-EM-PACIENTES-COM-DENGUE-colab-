@@ -1,0 +1,35 @@
+print("--- Configuração do Pré-processamento ---")
+
+categorical_features = ['CS_SEXO']
+categorical_features = [col for col in categorical_features if col in X.columns]
+
+numeric_features = ['IDADE_REAL']
+numeric_features = [col for col in numeric_features if col in X.columns]
+
+binary_features = [col for col in binary_features if col in X.columns]
+
+numeric_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='median')),
+    ('scaler', StandardScaler())
+])
+
+binary_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent'))
+])
+
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('encoder', OneHotEncoder(handle_unknown='ignore'))
+])
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric_features),
+        ('bin', binary_transformer, binary_features),
+        ('cat', categorical_transformer, categorical_features)
+    ]
+)
+
+print("Numéricas:", numeric_features)
+print("Binárias:", binary_features)
+print("Categóricas:", categorical_features)
