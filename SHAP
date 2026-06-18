@@ -1,0 +1,71 @@
+print("--- Explicabilidade com SHAP ---")
+
+if SHAP_DISPONIVEL:
+    try:
+        if best_row['Modelo'] == 'DummyClassifier':
+            print("SHAP não será aplicado ao DummyClassifier.")
+        else:
+            amostra_shap = X_test.sample(
+                n=min(500, len(X_test)),
+                random_state=42
+            )
+
+            preprocessador = best_model.named_steps['preprocessamento']
+            modelo_final = best_model.named_steps['modelo']
+
+            X_shap_transformado = preprocessador.transform(amostra_shap)
+
+            if hasattr(X_shap_transformado, "toarray"):
+                X_shap_transformado = X_shap_transformado.toarray()
+
+            nomes_variaveis = preprocessador.get_feature_names_out()
+
+            if best_row['Modelo'] in ['DecisionTree', 'RandomForest', 'XGBoost']:
+                explainer = shap.TreeExplainer(modelo_final)
+                shap_values = explainer.shap_values(X_shap_transformado)
+
+                if isinstance(shap_values, list):
+                    shap_values_plot = shap_values[1]
+                else:
+                    shap_values_plot = shap_values
+
+                plt.figure(figsize=(24, 8))
+
+                shap.summary_plot(
+                    shap_values_plot,
+                    X_shap_transformado,
+                    feature_names=nomes_variaveis,
+                    max_display=20,
+                    show=False
+                )
+
+                plt.title(f'Explicabilidade SHAP - {best_key}', fontsize=16)
+                plt.tight_layout()
+                plt.show()
+
+            elif best_row['Modelo'] == 'LogisticRegression':
+                explainer = shap.LinearExplainer(modelo_final, X_shap_transformado)
+                shap_values = explainer.shap_values(X_shap_transformado)
+
+                plt.figure(figsize=(24, 8))
+
+                shap.summary_plot(
+                    shap_values,
+                    X_shap_transformado,
+                    feature_names=nomes_variaveis,
+                    max_display=20,
+                    show=False
+                )
+
+                plt.title(f'Explicabilidade SHAP - {best_key}', fontsize=16)
+                plt.tight_layout()
+                plt.show()
+
+            else:
+                print(f"SHAP não configurado para o modelo: {best_row['Modelo']}")
+
+    except Exception as e:
+        print("Não foi possível gerar SHAP para este modelo.")
+        print("Erro:", e)
+else:
+    print("SHAP não disponível.")
