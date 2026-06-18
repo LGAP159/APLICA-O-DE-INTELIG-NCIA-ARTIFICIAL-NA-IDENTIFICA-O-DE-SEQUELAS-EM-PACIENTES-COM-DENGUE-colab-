@@ -1,0 +1,22 @@
+print("--- Curva de Calibração ---")
+
+prob_true, prob_pred = calibration_curve(
+    Y_test,
+    y_prob_best,
+    n_bins=10,
+    strategy='quantile'
+)
+
+brier = brier_score_loss(Y_test, y_prob_best)
+
+plt.figure(figsize=(6, 6))
+plt.plot(prob_pred, prob_true, marker='o', label=f'Modelo - Brier: {brier:.4f}')
+plt.plot([0, 1], [0, 1], 'k--', label='Calibração perfeita')
+plt.xlabel('Probabilidade prevista')
+plt.ylabel('Frequência observada')
+plt.title('Curva de Calibração')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+print(f"Brier Score: {brier:.4f}")
