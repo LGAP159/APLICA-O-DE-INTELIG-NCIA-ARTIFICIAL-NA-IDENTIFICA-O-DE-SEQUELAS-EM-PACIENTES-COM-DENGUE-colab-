@@ -1,0 +1,35 @@
+print("--- Avaliação Detalhada do Melhor Modelo ---")
+
+y_pred_best = best_model.predict(X_test)
+
+if hasattr(best_model, "predict_proba"):
+    y_prob_best = best_model.predict_proba(X_test)[:, 1]
+else:
+    y_prob_best = best_model.decision_function(X_test)
+
+cm = confusion_matrix(Y_test, y_pred_best, labels=[0, 1])
+
+print("Matriz de Confusão:")
+print(cm)
+
+print("\nRelatório de Classificação:")
+print(classification_report(
+    Y_test,
+    y_pred_best,
+    target_names=['Sem risco grave', 'Com risco grave'],
+    zero_division=0
+))
+
+plt.figure(figsize=(5, 4))
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt='d',
+    cmap='Blues',
+    xticklabels=['Sem risco', 'Com risco'],
+    yticklabels=['Sem risco', 'Com risco']
+)
+plt.xlabel('Predito')
+plt.ylabel('Real')
+plt.title(f'Matriz de Confusão - {best_key}')
+plt.show()
