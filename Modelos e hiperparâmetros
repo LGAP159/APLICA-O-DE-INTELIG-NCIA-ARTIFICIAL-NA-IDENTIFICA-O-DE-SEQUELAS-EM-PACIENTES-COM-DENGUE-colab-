@@ -1,0 +1,115 @@
+print("--- Definição dos Modelos e Hiperparâmetros ---")
+
+cv = StratifiedKFold(
+    n_splits=3,
+    shuffle=True,
+    random_state=42
+)
+
+scoring = {
+    'accuracy': 'accuracy',
+    'precision': 'precision',
+    'recall': 'recall',
+    'f1': 'f1',
+    'roc_auc': 'roc_auc'
+}
+
+def total_combinacoes(grid):
+    if not grid:
+        return 1
+    return reduce(mul, [len(v) for v in grid.values()], 1)
+
+scale_pos_weight = (Y_train == 0).sum() / max((Y_train == 1).sum(), 1)
+
+model_configs = {
+    'DummyClassifier': (
+        DummyClassifier(strategy='most_frequent'),
+        {}
+    ),
+
+    'LogisticRegression': (
+        LogisticRegression(
+            max_iter=1000,
+            class_weight='balanced',
+            random_state=42,
+            n_jobs=-1
+        ),
+        {
+            'modelo__C': [0.1, 1, 10],
+            'modelo__solver': ['lbfgs']
+        }
+    ),
+
+    'DecisionTree': (
+        DecisionTreeClassifier(
+            class_weight='balanced',
+            random_state=42
+        ),
+        {
+            'modelo__max_depth': [5, 10, None],
+            'modelo__min_samples_split': [2, 10],
+            'modelo__min_samples_leaf': [1, 5]
+        }
+    ),
+
+    'RandomForest': (
+        RandomForestClassifier(
+            class_weight='balanced_subsample',
+            random_state=42,
+            n_jobs=-1
+        ),
+        {
+            'modelo__n_estimators': [100],
+            'modelo__max_depth': [10, None],
+            'modelo__min_samples_split': [2, 10],
+            'modelo__min_samples_leaf': [1, 5],
+            'modelo__max_features': ['sqrt']
+        }
+    ),
+
+    'SVM': (
+        SVC(
+            class_weight='balanced',
+            probability=True,
+            random_state=42
+        ),
+        {
+            'modelo__C': [1],
+            'modelo__kernel': ['rbf'],
+            'modelo__gamma': ['scale']
+        }
+    ),
+
+    'XGBoost': (
+        XGBClassifier(
+            objective='binary:logistic',
+            eval_metric='logloss',
+            random_state=42,
+            n_jobs=-1,
+            scale_pos_weight=scale_pos_weight
+        ),
+        {
+            'modelo__n_estimators': [100],
+            'modelo__max_depth': [3, 5],
+            'modelo__learning_rate': [0.05, 0.1],
+            'modelo__subsample': [0.8],
+            'modelo__colsample_bytree': [0.8]
+        }
+    )
+}
+
+# Modo rápido:
+# Remove o SVM porque ele costuma ser muito lento em bases grandes.
+model_configs.pop('SVM', None)
+
+# Para rodar mais rápido, testaremos primeiro apenas sem SMOTE.
+# O SMOTE pode ser testado depois em uma amostra menor ou em uma execução final.
+cenarios = {
+    'Sem SMOTE': None
+}
+
+print("Modelos utilizados:")
+print(list(model_configs.keys()))
+
+print("\nCenários utilizados:")
+print(list(cenarios.keys()))
