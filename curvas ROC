@@ -1,0 +1,22 @@
+print("--- Curvas ROC ---")
+
+plt.figure(figsize=(10, 8))
+plt.plot([0, 1], [0, 1], 'k--', label='Aleatório (AUC = 0.50)')
+
+for key, model in trained_models.items():
+    if hasattr(model, "predict_proba"):
+        y_score = model.predict_proba(X_test)[:, 1]
+    else:
+        y_score = model.decision_function(X_test)
+
+    fpr, tpr, _ = roc_curve(Y_test, y_score)
+    roc_auc = auc(fpr, tpr)
+
+    plt.plot(fpr, tpr, label=f'{key} (AUC = {roc_auc:.3f})')
+
+plt.xlabel('Taxa de Falso Positivo')
+plt.ylabel('Taxa de Verdadeiro Positivo')
+plt.title('Curva ROC - Predição de Risco Grave em Dengue')
+plt.legend(loc='lower right')
+plt.grid(True)
+plt.show()
