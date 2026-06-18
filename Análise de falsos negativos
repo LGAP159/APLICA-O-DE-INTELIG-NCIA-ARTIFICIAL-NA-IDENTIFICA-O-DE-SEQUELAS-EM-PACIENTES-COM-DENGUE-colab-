@@ -1,0 +1,16 @@
+print("--- Análise de Falsos Negativos ---")
+
+analise_erros = X_test.copy()
+analise_erros['real'] = Y_test
+analise_erros['predito'] = y_pred_best
+analise_erros['probabilidade_risco'] = y_prob_best
+
+falsos_negativos = analise_erros[
+    (analise_erros['real'] == 1) &
+    (analise_erros['predito'] == 0)
+]
+
+print(f"Quantidade de falsos negativos: {len(falsos_negativos)}")
+
+display(falsos_negativos.head(20))
+display(falsos_negativos.describe(include='all'))
