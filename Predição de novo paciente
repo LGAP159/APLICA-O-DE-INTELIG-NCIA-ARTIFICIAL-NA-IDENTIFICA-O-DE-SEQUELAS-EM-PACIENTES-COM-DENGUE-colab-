@@ -1,0 +1,180 @@
+print("--- Predição de Novos Pacientes ---")
+
+modelo_ia = joblib.load('modelo_ia_dengue_gravidade.pkl')
+
+def classificar_faixa_risco(probabilidade):
+    if probabilidade < 0.30:
+        return 'Baixo risco'
+    elif probabilidade < 0.70:
+        return 'Médio risco'
+    else:
+        return 'Alto risco'
+
+
+def interpretar_predicao(previsao, probabilidade):
+    faixa = classificar_faixa_risco(probabilidade)
+
+    if previsao == 1:
+        decisao = 'Com risco grave'
+    else:
+        decisao = 'Sem risco grave'
+
+    if faixa == 'Baixo risco':
+        recomendacao = 'Acompanhar sintomas e manter orientação clínica.'
+    elif faixa == 'Médio risco':
+        recomendacao = 'Requer atenção e acompanhamento mais próximo.'
+    else:
+        recomendacao = 'Priorizar avaliação clínica e monitoramento.'
+
+    return faixa, decisao, recomendacao
+
+
+def preparar_pacientes(lista_pacientes):
+    dados = pd.DataFrame(lista_pacientes)
+
+    for col in binary_features:
+        if col in dados.columns:
+            dados[col] = dados[col].replace({
+                1: 1,
+                2: 0,
+                9: np.nan
+            })
+
+    return dados
+
+
+def prever_risco_pacientes(lista_pacientes):
+    dados_pacientes = preparar_pacientes(lista_pacientes)
+
+    previsoes = modelo_ia.predict(dados_pacientes)
+
+    if hasattr(modelo_ia, "predict_proba"):
+        probabilidades = modelo_ia.predict_proba(dados_pacientes)[:, 1]
+    else:
+        probabilidades = modelo_ia.decision_function(dados_pacientes)
+
+    resultados = []
+
+    for i, paciente in enumerate(lista_pacientes):
+        faixa, decisao, recomendacao = interpretar_predicao(
+            previsoes[i],
+            probabilidades[i]
+        )
+
+        resultados.append({
+            'Paciente': paciente.get('ID', f'Paciente {i + 1}'),
+            'Sexo': paciente.get('CS_SEXO'),
+            'Idade': paciente.get('IDADE_REAL'),
+            'Febre': paciente.get('FEBRE'),
+            'Mialgia': paciente.get('MIALGIA'),
+            'Cefaleia': paciente.get('CEFALEIA'),
+            'Náusea': paciente.get('NAUSEA'),
+            'Vômito': paciente.get('VOMITO'),
+            'Diabetes': paciente.get('DIABETES'),
+            'Hipertensão': paciente.get('HIPERTENSA'),
+            'Doença renal': paciente.get('RENAL'),
+            'Predição': int(previsoes[i]),
+            'Resultado': decisao,
+            'Probabilidade de risco grave': probabilidades[i],
+            'Probabilidade (%)': f"{probabilidades[i]:.2%}",
+            'Faixa de risco': faixa,
+            'Recomendação': recomendacao
+        })
+
+    return pd.DataFrame(resultados)
+
+
+pacientes_exemplo = [
+    {
+        'ID': 'Paciente 1',
+        'CS_SEXO': 'M',
+        'FEBRE': 1,
+        'MIALGIA': 1,
+        'CEFALEIA': 1,
+        'NAUSEA': 2,
+        'VOMITO': 2,
+        'DIABETES': 2,
+        'HIPERTENSA': 2,
+        'RENAL': 2,
+        'IDADE_REAL': 22
+    },
+    {
+        'ID': 'Paciente 2',
+        'CS_SEXO': 'F',
+        'FEBRE': 1,
+        'MIALGIA': 1,
+        'CEFALEIA': 2,
+        'NAUSEA': 1,
+        'VOMITO': 1,
+        'DIABETES': 1,
+        'HIPERTENSA': 1,
+        'RENAL': 2,
+        'IDADE_REAL': 78
+    },
+    {
+        'ID': 'Paciente 3',
+        'CS_SEXO': 'M',
+        'FEBRE': 2,
+        'MIALGIA': 2,
+        'CEFALEIA': 2,
+        'NAUSEA': 1,
+        'VOMITO': 1,
+        'DIABETES': 2,
+        'HIPERTENSA': 1,
+        'RENAL': 1,
+        'IDADE_REAL': 65
+    },
+    {
+        'ID': 'Paciente 4',
+        'CS_SEXO': 'F',
+        'FEBRE': 1,
+        'MIALGIA': 1,
+        'CEFALEIA': 1,
+        'NAUSEA': 1,
+        'VOMITO': 2,
+        'DIABETES': 2,
+        'HIPERTENSA': 2,
+        'RENAL': 2,
+        'IDADE_REAL': 35
+    },
+    {
+        'ID': 'Paciente 5',
+        'CS_SEXO': 'F',
+        'FEBRE': 1,
+        'MIALGIA': 2,
+        'CEFALEIA': 2,
+        'NAUSEA': 1,
+        'VOMITO': 1,
+        'DIABETES': 1,
+        'HIPERTENSA': 1,
+        'RENAL': 1,
+        'IDADE_REAL': 82
+    }
+]
+
+resultados_pacientes = prever_risco_pacientes(pacientes_exemplo)
+
+display(resultados_pacientes)
+
+plt.figure(figsize=(12, 5))
+sns.barplot(
+    data=resultados_pacientes,
+    x='Paciente',
+    y='Probabilidade de risco grave',
+    hue='Faixa de risco',
+    palette={
+        'Baixo risco': '#7BC96F',
+        'Médio risco': '#F4D35E',
+        'Alto risco': '#EE6055'
+    }
+)
+
+plt.axhline(0.30, color='orange', linestyle='--', label='Limite médio risco')
+plt.axhline(0.70, color='red', linestyle='--', label='Limite alto risco')
+plt.title('Probabilidade Estimada de Risco Grave por Paciente')
+plt.xlabel('Paciente')
+plt.ylabel('Probabilidade de risco grave')
+plt.ylim(0, 1)
+plt.legend()
+plt.grid(axis='y', alpha=0.4)
+plt.show()
