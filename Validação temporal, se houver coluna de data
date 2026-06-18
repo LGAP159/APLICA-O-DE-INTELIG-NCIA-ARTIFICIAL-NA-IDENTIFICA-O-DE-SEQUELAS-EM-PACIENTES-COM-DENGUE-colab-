@@ -1,0 +1,17 @@
+print("--- Verificação de Possível Validação Temporal ---")
+
+possiveis_colunas_tempo = [
+    'ANO', 'NU_ANO', 'MES', 'DT_NOTIFIC', 'DT_SIN_PRI', 'DATA_NOTIFICACAO'
+]
+
+colunas_tempo_existentes = [
+    col for col in possiveis_colunas_tempo if col in df_modelo.columns
+]
+
+if colunas_tempo_existentes:
+    print("Colunas temporais encontradas:")
+    print(colunas_tempo_existentes)
+    print("É possível criar uma validação temporal usando essas colunas.")
+else:
+    print("Nenhuma coluna temporal encontrada entre as opções verificadas.")
+    print("A validação temporal não foi aplicada neste notebook.")
