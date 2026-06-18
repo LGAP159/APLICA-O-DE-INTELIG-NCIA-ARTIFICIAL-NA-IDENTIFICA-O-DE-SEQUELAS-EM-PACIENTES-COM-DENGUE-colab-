@@ -1,0 +1,13 @@
+print("--- Separação entre Variáveis Preditoras e Alvo ---")
+
+cols_to_drop = ['CLASSI_FIN', 'EVOLUCAO', 'risco_grave', 'TP_IDADE']
+cols_to_drop = [col for col in cols_to_drop if col in df_modelo.columns]
+
+X = df_modelo.drop(columns=cols_to_drop)
+Y = df_modelo['risco_grave']
+
+print(f"Shape de X: {X.shape}")
+print(f"Shape de Y: {Y.shape}")
+
+print("\nColunas usadas como entrada:")
+print(X.columns.tolist())
