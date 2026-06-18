@@ -1,0 +1,28 @@
+dicionario_variaveis = {
+    'CS_SEXO': 'Sexo do paciente: F = Feminino, M = Masculino',
+    'FEBRE': 'Febre: 1 = Sim, 2 = Não, 9 = Ignorado',
+    'MIALGIA': 'Mialgia: 1 = Sim, 2 = Não, 9 = Ignorado',
+    'CEFALEIA': 'Cefaleia: 1 = Sim, 2 = Não, 9 = Ignorado',
+    'NAUSEA': 'Náusea: 1 = Sim, 2 = Não, 9 = Ignorado',
+    'VOMITO': 'Vômito: 1 = Sim, 2 = Não, 9 = Ignorado',
+    'DIABETES': 'Diabetes: 1 = Sim, 2 = Não, 9 = Ignorado',
+    'HIPERTENSA': 'Hipertensão: 1 = Sim, 2 = Não, 9 = Ignorado',
+    'RENAL': 'Doença renal: 1 = Sim, 2 = Não, 9 = Ignorado',
+    'CLASSI_FIN': 'Classificação final do caso',
+    'EVOLUCAO': 'Evolução final do caso',
+    'TP_IDADE': 'Tipo de idade registrada',
+    'IDADE_REAL': 'Idade do paciente'
+}
+
+for coluna, descricao in dicionario_variaveis.items():
+    print(f"{coluna}: {descricao}")
+
+colunas_obrigatorias = [
+    'CS_SEXO', 'FEBRE', 'MIALGIA', 'CEFALEIA', 'NAUSEA', 'VOMITO',
+    'DIABETES', 'HIPERTENSA', 'RENAL', 'CLASSI_FIN', 'IDADE_REAL'
+]
+
+colunas_faltantes = [col for col in colunas_obrigatorias if col not in df.columns]
+
+if colunas_faltantes:
+    raise ValueError(f"Colunas ausentes no dataset: {colunas_faltantes}")
