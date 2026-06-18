@@ -1,0 +1,23 @@
+try:
+    from imblearn.over_sampling import SMOTE
+    from imblearn.pipeline import Pipeline as ImbPipeline
+except ImportError:
+    !pip -q install imbalanced-learn
+    from imblearn.over_sampling import SMOTE
+    from imblearn.pipeline import Pipeline as ImbPipeline
+
+try:
+    from xgboost import XGBClassifier
+    XGBOOST_DISPONIVEL = True
+except ImportError:
+    !pip -q install xgboost
+    from xgboost import XGBClassifier
+    XGBOOST_DISPONIVEL = True
+
+try:
+    import shap
+    SHAP_DISPONIVEL = True
+except ImportError:
+    !pip -q install shap
+    import shap
+    SHAP_DISPONIVEL = True
