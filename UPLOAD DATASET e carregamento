@@ -1,0 +1,17 @@
+print("--- Carregamento do Dataset ---")
+
+from google.colab import files
+
+uploaded = files.upload()
+nome_arquivo = list(uploaded.keys())[0]
+
+df = pd.read_csv(
+    nome_arquivo,
+    na_values=['NA', '', ' ', 'NaN', 'nan']
+)
+
+print("Dataset carregado com sucesso.")
+print(f"Linhas: {df.shape[0]}")
+print(f"Colunas: {df.shape[1]}")
+
+display(df.head())
