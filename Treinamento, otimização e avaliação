@@ -1,0 +1,115 @@
+print("--- Treinamento, Otimização e Avaliação ---")
+
+def calcular_specificity(y_true, y_pred):
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+    return tn / (tn + fp) if (tn + fp) > 0 else 0
+
+trained_models = {}
+all_metrics = []
+
+for cenario, sampler in cenarios.items():
+    for name, (model, param_grid) in model_configs.items():
+        print(f"\nTreinando: {name} | {cenario}")
+
+        steps = [('preprocessamento', preprocessor)]
+
+        if sampler is not None and name != 'DummyClassifier':
+            steps.append(('smote', sampler))
+
+        steps.append(('modelo', model))
+
+        pipeline = ImbPipeline(steps=steps)
+
+        start_time = time.time()
+
+        if param_grid:
+            n_iter = min(3, total_combinacoes(param_grid))
+
+            search = RandomizedSearchCV(
+                pipeline,
+                param_distributions=param_grid,
+                n_iter=n_iter,
+                scoring=scoring,
+                refit='f1',
+                cv=cv,
+                n_jobs=-1,
+                random_state=42,
+                return_train_score=False
+            )
+
+            search.fit(X_train, Y_train)
+
+            final_model = search.best_estimator_
+            best_idx = search.best_index_
+
+            recall_cv = search.cv_results_['mean_test_recall'][best_idx]
+            recall_std = search.cv_results_['std_test_recall'][best_idx]
+            f1_cv = search.cv_results_['mean_test_f1'][best_idx]
+            best_params = search.best_params_
+
+        else:
+            cv_result = cross_validate(
+                pipeline,
+                X_train,
+                Y_train,
+                cv=cv,
+                scoring=scoring,
+                n_jobs=-1
+            )
+
+            pipeline.fit(X_train, Y_train)
+            final_model = pipeline
+
+            recall_cv = cv_result['test_recall'].mean()
+            recall_std = cv_result['test_recall'].std()
+            f1_cv = cv_result['test_f1'].mean()
+            best_params = {}
+
+        end_time = time.time()
+
+        y_pred = final_model.predict(X_test)
+
+        if hasattr(final_model, "predict_proba"):
+            y_score = final_model.predict_proba(X_test)[:, 1]
+        else:
+            y_score = final_model.decision_function(X_test)
+
+        cm = confusion_matrix(Y_test, y_pred, labels=[0, 1])
+        fpr, tpr, _ = roc_curve(Y_test, y_score)
+
+        recall_ic95 = 1.96 * recall_std / np.sqrt(3)
+
+        key = f"{name} - {cenario}"
+        trained_models[key] = final_model
+
+        all_metrics.append({
+            'Modelo': name,
+            'Cenario': cenario,
+            'Acurácia': accuracy_score(Y_test, y_pred),
+            'Precisão': precision_score(Y_test, y_pred, zero_division=0),
+            'Recall/Sensibilidade': recall_score(Y_test, y_pred, zero_division=0),
+            'Specificity/Especificidade': calcular_specificity(Y_test, y_pred),
+            'F1-Score': f1_score(Y_test, y_pred, zero_division=0),
+            'AUC': auc(fpr, tpr),
+            'Recall CV Médio': recall_cv,
+            'Recall CV IC95': recall_ic95,
+            'F1 CV Médio': f1_cv,
+            'Tempo (s)': end_time - start_time,
+            'Melhores Parâmetros': best_params
+        })
+
+        print("Finalizado.")
+        print(f"Tempo: {end_time - start_time:.2f} segundos")
+        print(f"F1-Score: {f1_score(Y_test, y_pred, zero_division=0):.4f}")
+        print(f"Recall/Sensibilidade: {recall_score(Y_test, y_pred, zero_division=0):.4f}")
+        print(f"AUC: {auc(fpr, tpr):.4f}")
+
+results_df = pd.DataFrame(all_metrics)
+
+results_df = results_df.sort_values(
+    by=['F1-Score', 'Recall/Sensibilidade', 'AUC'],
+    ascending=False
+).reset_index(drop=True)
+
+print("\nTabela final de resultados:")
+display(results_df.round(4))
