@@ -1,0 +1,35 @@
+print("--- Criação da Variável-Alvo: Risco de Gravidade ---")
+
+# 0 = Dengue sem sinais de alarme
+# 1 = Dengue com sinais de alarme ou dengue grave
+
+df['risco_grave'] = df['CLASSI_FIN'].map({
+    10: 0,
+    11: 1,
+    12: 1
+})
+
+df_modelo = df.dropna(subset=['risco_grave']).copy()
+df_modelo['risco_grave'] = df_modelo['risco_grave'].astype(int)
+
+print("Distribuição absoluta:")
+print(df_modelo['risco_grave'].value_counts())
+
+print("\nDistribuição percentual:")
+print((df_modelo['risco_grave'].value_counts(normalize=True) * 100).round(2))
+
+print("""
+ATENÇÃO METODOLÓGICA:
+O alvo risco_grave foi derivado de CLASSI_FIN.
+Logo, o modelo deve ser descrito como predição da classificação de gravidade da dengue.
+Se CLASSI_FIN for construída oficialmente a partir dos mesmos sintomas usados como entrada,
+o modelo pode estar reaprendendo uma regra clínica já existente.
+""")
+
+plt.figure(figsize=(6, 4))
+sns.countplot(x='risco_grave', data=df_modelo, palette='pastel')
+plt.title('Distribuição da Variável-Alvo: Risco de Gravidade')
+plt.xlabel('0 = Sem sinais de alarme | 1 = Com sinais de alarme ou dengue grave')
+plt.ylabel('Quantidade de registros')
+plt.grid(axis='y', alpha=0.5)
+plt.show()
