@@ -1,0 +1,34 @@
+print("--- Análise por Sexo e Faixa Etária ---")
+
+def avaliar_por_grupo(df_analise, coluna):
+    linhas = []
+
+    for grupo in df_analise[coluna].dropna().unique():
+        dados_grupo = df_analise[df_analise[coluna] == grupo]
+
+        if dados_grupo['real'].nunique() < 2:
+            continue
+
+        linhas.append({
+            'Grupo': grupo,
+            'Quantidade': len(dados_grupo),
+            'Recall': recall_score(dados_grupo['real'], dados_grupo['predito'], zero_division=0),
+            'Precisão': precision_score(dados_grupo['real'], dados_grupo['predito'], zero_division=0),
+            'F1-Score': f1_score(dados_grupo['real'], dados_grupo['predito'], zero_division=0)
+        })
+
+    return pd.DataFrame(linhas)
+
+if 'CS_SEXO' in analise_erros.columns:
+    print("Desempenho por sexo:")
+    display(avaliar_por_grupo(analise_erros, 'CS_SEXO'))
+
+if 'IDADE_REAL' in analise_erros.columns:
+    analise_erros['faixa_idade'] = pd.cut(
+        analise_erros['IDADE_REAL'],
+        bins=[0, 18, 40, 60, 120],
+        labels=['0-18', '19-40', '41-60', '60+']
+    )
+
+    print("Desempenho por faixa etária:")
+    display(avaliar_por_grupo(analise_erros, 'faixa_idade'))
