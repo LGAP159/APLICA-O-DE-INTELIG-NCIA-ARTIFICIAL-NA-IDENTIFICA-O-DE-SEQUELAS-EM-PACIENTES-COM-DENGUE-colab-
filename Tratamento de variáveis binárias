@@ -1,0 +1,18 @@
+print("--- Tratamento das Variáveis Binárias ---")
+
+binary_features = [
+    'FEBRE', 'MIALGIA', 'CEFALEIA', 'NAUSEA', 'VOMITO',
+    'DIABETES', 'HIPERTENSA', 'RENAL'
+]
+
+binary_features = [col for col in binary_features if col in X.columns]
+
+for col in binary_features:
+    X[col] = X[col].replace({
+        1: 1,
+        2: 0,
+        9: np.nan
+    })
+
+print("Variáveis binárias tratadas:")
+print(binary_features)
