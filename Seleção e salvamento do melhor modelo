@@ -1,0 +1,41 @@
+print("--- Salvando o Melhor Modelo ---")
+
+best_row = results_df.iloc[0]
+best_key = f"{best_row['Modelo']} - {best_row['Cenario']}"
+best_model = trained_models[best_key]
+
+print(f"Melhor modelo: {best_key}")
+
+joblib.dump(best_model, 'modelo_ia_dengue_gravidade.pkl')
+results_df.to_csv('resultados_modelos_dengue_gravidade.csv', index=False)
+
+metadata = {
+    'data_treinamento': datetime.now().isoformat(),
+    'objetivo': 'Predição de risco de gravidade em pacientes com dengue',
+    'alvo': 'risco_grave derivado de CLASSI_FIN',
+    'mapeamento_alvo': {
+        'CLASSI_FIN 10': '0 - dengue sem sinais de alarme',
+        'CLASSI_FIN 11': '1 - dengue com sinais de alarme',
+        'CLASSI_FIN 12': '1 - dengue grave'
+    },
+    'melhor_modelo': best_key,
+    'metricas': {
+        'Acurácia': float(best_row['Acurácia']),
+        'Precisão': float(best_row['Precisão']),
+        'Recall/Sensibilidade': float(best_row['Recall/Sensibilidade']),
+        'Specificity/Especificidade': float(best_row['Specificity/Especificidade']),
+        'F1-Score': float(best_row['F1-Score']),
+        'AUC': float(best_row['AUC']),
+        'Recall CV Médio': float(best_row['Recall CV Médio']),
+        'Recall CV IC95': float(best_row['Recall CV IC95'])
+    },
+    'features': X.columns.tolist(),
+    'sklearn_version': sklearn.__version__
+}
+
+with open('metadata_modelo_dengue_gravidade.json', 'w', encoding='utf-8') as f:
+    json.dump(metadata, f, ensure_ascii=False, indent=4)
+
+print("Modelo salvo como: modelo_ia_dengue_gravidade.pkl")
+print("Resultados salvos como: resultados_modelos_dengue_gravidade.csv")
+print("Metadata salvo como: metadata_modelo_dengue_gravidade.json")
