@@ -1,0 +1,24 @@
+print("--- Importância das Variáveis por Permutação ---")
+
+resultado_importancia = permutation_importance(
+    best_model,
+    X_test,
+    Y_test,
+    n_repeats=5,
+    random_state=42,
+    scoring='f1'
+)
+
+importancias = pd.DataFrame({
+    'Variável': X_test.columns,
+    'Importância': resultado_importancia.importances_mean
+}).sort_values(by='Importância', ascending=False)
+
+display(importancias)
+
+plt.figure(figsize=(8, 5))
+sns.barplot(data=importancias, x='Importância', y='Variável', palette='pastel')
+plt.title(f'Importância das Variáveis - {best_key}')
+plt.xlabel('Importância média')
+plt.ylabel('Variável')
+plt.show()
