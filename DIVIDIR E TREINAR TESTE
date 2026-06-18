@@ -1,0 +1,20 @@
+print("--- Divisão entre Treino e Teste ---")
+
+X_train, X_test, Y_train, Y_test = train_test_split(
+    X,
+    Y,
+    test_size=0.3,
+    random_state=42,
+    stratify=Y
+)
+
+print(f"X_train: {X_train.shape}")
+print(f"X_test: {X_test.shape}")
+print(f"Y_train: {Y_train.shape}")
+print(f"Y_test: {Y_test.shape}")
+
+print("\nDistribuição no treino (%):")
+print((Y_train.value_counts(normalize=True) * 100).round(2))
+
+print("\nDistribuição no teste (%):")
+print((Y_test.value_counts(normalize=True) * 100).round(2))
